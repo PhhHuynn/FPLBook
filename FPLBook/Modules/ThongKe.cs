@@ -6,48 +6,43 @@ namespace FPLBook.Modules
 {
     public static class ThongKe
     {
-        public static void ThongKeTheoNhaXuatBan(string filePath)
+        public static void ThongKeTheoNhaXuatBan(FileInfo inputFile)
         {
             var stats = new Dictionary<string, (int bookCount, HashSet<string> uniqueGenres)>();
-            string[] headers;
-            int publisherIndex, genreIndex;
+            var records = ReadWriteCsvHelper.ReadCsvFromFile(inputFile);
 
-            using (var reader = new StreamReader(filePath))
+            if (records.Count == 0)
             {
-                headers = ParseCsvLine(reader.ReadLine());
-                publisherIndex = Array.FindIndex(headers, h => h.Trim().ToLower() == "publisher");
-                genreIndex = Array.FindIndex(headers, h => h.Trim().ToLower() == "genre");
+                Console.WriteLine("File CSV không có dữ liệu!");
+                return;
+            }
 
-                if (publisherIndex == -1 || genreIndex == -1)
+            if (!records[0].ContainsKey("Publisher") || !records[0].ContainsKey("Genre"))
+            {
+                Console.WriteLine("Không tìm thấy cột 'Publisher' hoặc 'Genre' trong file CSV!");
+                return;
+            }
+
+            foreach (var record in records)
+            {
+                if (!record.TryGetValue("Publisher", out string publisher) || string.IsNullOrEmpty(publisher))
+                    continue;
+
+                record.TryGetValue("Genre", out string genre);
+
+                if (!stats.ContainsKey(publisher))
                 {
-                    Console.WriteLine("Không tìm thấy cột 'Publisher' hoặc 'Genre' trong file CSV!");
-                    return;
+                    stats[publisher] = (0, new HashSet<string>());
                 }
 
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    string[] values = ParseCsvLine(line);
-                    if (values.Length <= Math.Max(publisherIndex, genreIndex)) continue;
-
-                    string publisher = values[publisherIndex].Trim();
-                    string genre = values[genreIndex].Trim();
-
-                    if (string.IsNullOrEmpty(publisher)) continue;
-
-                    if (!stats.ContainsKey(publisher))
-                    {
-                        stats[publisher] = (0, new HashSet<string>());
-                    }
-
-                    var (bookCount, uniqueGenres) = stats[publisher];
-                    uniqueGenres.Add(genre); // Thêm vào HashSet để loại bỏ trùng lặp
-                    stats[publisher] = (bookCount + 1, uniqueGenres);
-                }
+                var (bookCount, uniqueGenres) = stats[publisher];
+                uniqueGenres.Add(genre); // Thêm vào HashSet để loại bỏ trùng lặp
+                stats[publisher] = (bookCount + 1, uniqueGenres);
             }
 
             PrintStatistics(stats);
         }
+
 
         static void PrintStatistics(Dictionary<string, (int bookCount, HashSet<string> uniqueGenres)> stats)
         {
@@ -61,29 +56,5 @@ namespace FPLBook.Modules
             }
         }
 
-        static string[] ParseCsvLine(string line)
-        {
-            List<string> result = new List<string>();
-            bool inQuotes = false;
-            string current = "";
-
-            foreach (char c in line)
-            {
-                if (c == '"' && inQuotes)
-                    inQuotes = false;
-                else if (c == '"')
-                    inQuotes = true;
-                else if (c == ',' && !inQuotes)
-                {
-                    result.Add(current.Trim());
-                    current = "";
-                }
-                else
-                    current += c;
-            }
-            result.Add(current.Trim());
-
-            return result.ToArray();
-        }
     }
 }

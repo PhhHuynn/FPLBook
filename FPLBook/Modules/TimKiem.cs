@@ -11,8 +11,6 @@ namespace FPLBook.Modules
         {
             List<Dictionary<string, string>> records = ReadWriteCsvHelper.ReadCsvFromFile(file);
 
-
-
             if (records.Count == 0)
             {
                 Console.WriteLine("Không có dữ liệu để tìm kiếm!");
