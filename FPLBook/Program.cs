@@ -2,11 +2,14 @@
 using System.CommandLine;
 using FPLBook.Modules;
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 
 internal class Program
 {
     private static async Task<int> Main(string[] args)
     {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         Console.InputEncoding = System.Text.Encoding.UTF8;
         Console.OutputEncoding = System.Text.Encoding.UTF8;
         /*
@@ -205,6 +208,13 @@ internal class Program
             await Task.Run(() => ReadWriteCsvHelper.DecryptFile(input.FullName, output.FullName, decryptionKey));
         }, inputFileOption, decryptionKeyOption, outputFileOption);
 
-        return await rootCommand.InvokeAsync(args);
+        int returnInt = await rootCommand.InvokeAsync(args);
+        stopwatch.Stop();
+
+        Console.WriteLine($"Elapsed Time: {stopwatch.ElapsedMilliseconds} ms");
+        Console.WriteLine($"Elapsed Time: {stopwatch.ElapsedTicks} ticks");
+        Console.WriteLine($"Elapsed Time: {stopwatch.Elapsed}");
+        return returnInt;
+
     }
 }
