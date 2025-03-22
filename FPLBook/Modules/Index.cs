@@ -19,7 +19,7 @@ namespace FPLBook.Modules
             // ✅ Nếu không có "Index", tự động thêm
             if (!headers.Any(h => h.Trim().Equals("Index", StringComparison.OrdinalIgnoreCase)))
             {
-                Console.WriteLine("⚠️ Không tìm thấy cột 'Index', tự động thêm...");
+                Console.WriteLine("Không tìm thấy cột 'Index', tự động thêm...");
                 headers.Insert(0, "Index"); // Thêm "Index" vào đầu danh sách cột
 
                 // Gán số thứ tự cho từng dòng

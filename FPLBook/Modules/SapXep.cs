@@ -12,7 +12,7 @@ namespace FPLBook.Modules
         {
             if (records == null || records.Count == 0 || sortColumns == null || sortColumns.Length == 0)
             {
-                Console.WriteLine("❌ Không có dữ liệu hoặc danh sách cột sắp xếp bị trống.");
+                Console.WriteLine("Không có dữ liệu hoặc danh sách cột sắp xếp bị trống.");
                 return records ?? new List<Dictionary<string, string>>();
             }
 
@@ -26,7 +26,7 @@ namespace FPLBook.Modules
             }
             if (validSortColumns.Count == 0)
             {
-                Console.WriteLine("❌ Các cột sắp xếp không hợp lệ!");
+                Console.WriteLine("Các cột sắp xếp không hợp lệ!");
                 return records;
             }
 

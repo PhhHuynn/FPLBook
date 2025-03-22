@@ -101,10 +101,17 @@ namespace FPLBook.Modules
                 {
                     if (records.Count > 0)
                     {
-                        writer.WriteLine(string.Join(",", records[0].Keys));
+                        // Write header row (keys), quoting if spaces exist
+                        var headers = records[0].Keys.Select(key =>
+                            key.Contains(" ") ? $"\"{key}\"" : key);
+                        writer.WriteLine(string.Join(",", headers));
+
+                        // Write data rows, quoting values with spaces
                         foreach (var record in records)
                         {
-                            writer.WriteLine(string.Join(",", record.Values));
+                            var values = record.Values.Select(value =>
+                                value.Contains(" ") ? $"\"{value}\"" : value);
+                            writer.WriteLine(string.Join(",", values));
                         }
                     }
                 }
