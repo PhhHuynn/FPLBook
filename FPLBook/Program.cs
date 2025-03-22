@@ -162,8 +162,7 @@ internal class Program
         // 2
         indexCommand.SetHandler(async (input, indexAfter, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(FPLBook.Modules.Index.MoveIndexColumn(ReadWriteCsvHelper.ReadCsvFromFile(input), indexAfter), output));
         }, inputFileOption, indexAfterOption, outputFileOption);
 
         // 3
