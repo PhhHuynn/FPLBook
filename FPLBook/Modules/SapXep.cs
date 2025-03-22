@@ -22,7 +22,7 @@ namespace FPLBook.Modules
             {
                 validSortColumns = sortColumns
                     .Where(col => records[0].ContainsKey(col))
-                .ToList();
+                    .ToList();
             }
             if (validSortColumns.Count == 0)
             {
