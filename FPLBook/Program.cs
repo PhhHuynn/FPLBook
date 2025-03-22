@@ -193,13 +193,13 @@ internal class Program
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
         {
-            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey));
+            await Task.Run(() => ReadWriteCsvHelper.EncryptFile(input.FullName, output.FullName, encryptionKey));
         }, inputFileOption, encryptionKeyOption, outputFileOption);
 
         // 8
         decryptCommand.SetHandler(async (input, decryptionKey, output) =>
         {
-            ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input, decryptionKey), output);
+            await Task.Run(() => ReadWriteCsvHelper.DecryptFile(input.FullName, output.FullName, decryptionKey));
         }, inputFileOption, decryptionKeyOption, outputFileOption);
 
         return await rootCommand.InvokeAsync(args);

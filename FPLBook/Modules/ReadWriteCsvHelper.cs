@@ -15,84 +15,79 @@ namespace FPLBook.Modules
         public static List<Dictionary<string, string>> ReadCsvFromFile(FileInfo inputFile)
         {
             var records = new List<Dictionary<string, string>>();
-            using (var fileStream = new FileStream(inputFile.FullName, FileMode.Open))
-            {
-                Stream dataStream = fileStream;
 
-                using (var reader = new StreamReader(dataStream))
+            try
+            {
+                using (var fileStream = new FileStream(inputFile.FullName, FileMode.Open))
                 {
-                    string[] headers = ParseCsvLine(reader.ReadLine());
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    Stream dataStream = fileStream;
+
+                    using (var reader = new StreamReader(dataStream))
                     {
-                        string[] values = ParseCsvLine(line);
-                        var record = new Dictionary<string, string>();
-                        for (int i = 0; i < headers.Length && i < values.Length; i++)
+                        string[] headers = ParseCsvLine(reader.ReadLine());
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
                         {
-                            record[headers[i]] = values[i];
+                            string[] values = ParseCsvLine(line);
+                            var record = new Dictionary<string, string>();
+                            for (int i = 0; i < headers.Length && i < values.Length; i++)
+                            {
+                                record[headers[i]] = values[i];
+                            }
+                            records.Add(record);
                         }
-                        records.Add(record);
                     }
                 }
             }
-            return records;
-        }
-
-        // Đọc file csv có mã hóa
-        public static List<Dictionary<string, string>> ReadCsvFromFile(FileInfo inputFile, string decryptionKey)
-        {
-            var records = new List<Dictionary<string, string>>();
-            using (var fileStream = new FileStream(inputFile.FullName, FileMode.Open))
+            catch (Exception ex)
             {
-                Stream dataStream = fileStream;
-                if (!string.IsNullOrEmpty(decryptionKey))
-                {
-                    dataStream = DecryptStream(fileStream, decryptionKey);
-                }
-
-                using (var reader = new StreamReader(dataStream))
-                {
-                    string[] headers = ParseCsvLine(reader.ReadLine());
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        string[] values = ParseCsvLine(line);
-                        var record = new Dictionary<string, string>();
-                        for (int i = 0; i < headers.Length && i < values.Length; i++)
-                        {
-                            record[headers[i]] = values[i];
-                        }
-                        records.Add(record);
-                    }
-                }
+                Console.WriteLine($"Lỗi đọc file CSV: {ex.Message}");
+                return new List<Dictionary<string, string>>();
             }
             return records;
         }
 
         public static string[] ParseCsvLine(string line)
         {
+            if (string.IsNullOrEmpty(line))
+            {
+                return new string[0];
+            }
+
             var fields = new List<string>();
             var currentField = new StringBuilder();
             bool inQuotes = false;
 
             for (int i = 0; i < line.Length; i++)
             {
-                if (line[i] == '"')
+                char currentChar = line[i];
+
+                if (currentChar == '"')
                 {
                     inQuotes = !inQuotes;
                 }
-                else if (line[i] == ',' && !inQuotes)
+                else if (currentChar == ',' && !inQuotes)
                 {
-                    fields.Add(currentField.ToString());
+                    fields.Add(TrimQuotes(currentField.ToString()));
                     currentField.Clear();
                 }
                 else
                 {
-                    currentField.Append(line[i]);
+                    currentField.Append(currentChar);
                 }
             }
-            fields.Add(currentField.ToString());
+
+            fields.Add(TrimQuotes(currentField.ToString()));
             return fields.ToArray();
+        }
+
+        private static string TrimQuotes(string field)
+        {
+            if (field.StartsWith('"') && field.EndsWith('"'))
+            {
+                return field.Substring(1, field.Length - 2);
+            }
+            return field;
         }
 
         // Viết file csv không mã hóa
@@ -116,58 +111,47 @@ namespace FPLBook.Modules
             }
         }
 
-        // Viết file csv với mã hóa
-        public static void WriteCsvToFile(List<Dictionary<string, string>> records, FileInfo outputFile, string encryptionKey)
+        // Mã hóa dòng dữ liệu bằng XOR cipher
+        public static void EncryptFile(string inputFile, string outputFile, string key)
         {
-            using (var fileStream = new FileStream(outputFile.FullName, FileMode.Create))
+            try
             {
-                Stream dataStream = fileStream;
-                if (!string.IsNullOrEmpty(encryptionKey))
-                {
-                    dataStream = EncryptStream(fileStream, encryptionKey);
-                }
-
-                using (var writer = new StreamWriter(dataStream))
-                {
-                    if (records.Count > 0)
-                    {
-                        writer.WriteLine(string.Join(",", records[0].Keys));
-                        foreach (var record in records)
-                        {
-                            writer.WriteLine(string.Join(",", record.Values));
-                        }
-                    }
-                }
+                byte[] inputBytes = File.ReadAllBytes(inputFile);
+                byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(key);
+                byte[] encryptedBytes = XorCipher(inputBytes, keyBytes);
+                File.WriteAllBytes(outputFile, encryptedBytes);
+                Console.WriteLine("Đã mã hóa tệp csv.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi mã hóa: {ex.Message}");
             }
         }
 
-        // Mã hõa dòng dữ liệu bằng AES
-        private static Stream EncryptStream(Stream inputStream, string key)
+        public static void DecryptFile(string inputFile, string outputFile, string key)
         {
-            using (Aes aesAlg = Aes.Create())
+            try
             {
-                aesAlg.Key = Encoding.UTF8.GetBytes(key.PadRight(32, '\0').Substring(0, 32));
-                aesAlg.IV = new byte[16];
-
-                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-                CryptoStream cryptoStream = new CryptoStream(inputStream, encryptor, CryptoStreamMode.Write);
-                cryptoStream.Write(aesAlg.IV, 0, 16);
-                return cryptoStream;
+                byte[] inputBytes = File.ReadAllBytes(inputFile);
+                byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(key);
+                byte[] decryptedBytes = XorCipher(inputBytes, keyBytes);
+                File.WriteAllBytes(outputFile, decryptedBytes);
+                Console.WriteLine("Đã giải mã tệp csv mã hóa.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi giải mã: {ex.Message}");
             }
         }
 
-        private static Stream DecryptStream(Stream inputStream, string key)
+        private static byte[] XorCipher(byte[] data, byte[] key)
         {
-            using (Aes aesAlg = Aes.Create())
+            byte[] result = new byte[data.Length];
+            for (int i = 0; i < data.Length; i++)
             {
-                aesAlg.Key = Encoding.UTF8.GetBytes(key.PadRight(32, '\0').Substring(0, 32));
-                byte[] iv = new byte[16];
-                inputStream.Read(iv, 0, 16);
-                aesAlg.IV = iv;
-
-                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-                return new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read);
+                result[i] = (byte)(data[i] ^ key[i % key.Length]);
             }
+            return result;
         }
     }
 }
