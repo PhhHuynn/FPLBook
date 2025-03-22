@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.CommandLine;
 using FPLBook.Modules;
+using System.CommandLine.Parsing;
 
 internal class Program
 {
@@ -15,41 +16,73 @@ internal class Program
         // Flag đọc và xuất file (1)
         var inputFileOption = new Option<FileInfo?>(
             name: "--inputFile",
-            description: "Lấy vị trí file và đọc để xử lý.");
+            description: "Lấy vị trí file và đọc để xử lý.")
+            {
+                IsRequired = true,
+            };
         var outputFileOption = new Option<FileInfo?>(
             name: "--outputFile",
-            description: "Vị trí file xuất sau khi xử lý.");
+            description: "Vị trí file xuất sau khi xử lý.")
+            {
+                IsRequired = true,
+            };
+
         // 2: Gán mã số cho sách và tạo file mới
         var indexAfterOption = new Option<int>(
             name: "--after",
             description: "Đặt vị trí cột index ở sau một cột bất kỳ (Nếu để là -1, cột sẽ được đặt ở vị trí đầu tiên)",
             getDefaultValue: () => -1);
+
         // 3: Sắp xếp sách theo nhà xuất bản và tiêu đề
-        var sortColumnOption = new Option<string[]>(
-            name: "--sortColumn",
-            description: "Tên cột để xếp theo thứ tự (tách nhau bởi dấu phẩy (,))");
+        var sortColumnsOption = new Option<string[]>(
+            name: "--sortColumns",
+            description: "Tên cột để xếp theo thứ tự (tách nhau bởi dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
 
         // 4: Tìm kiếm sách theo từ khóa (lọc từ khóa)
-        var searchKeywordOption = new Option<string[]>(
+        var searchKeywordOption = new Option<string>(
             name: "--searchKeyword",
-            description: "Từ khóa tìm kiếm");
-        var searchColumnOption = new Option<string[]>(
-            name: "--searchColumn",
-            description: "Tên cột để tìm kiếm (tách nhau bởi dấu phẩy (,))");
+            description: "Từ khóa tìm kiếm")
+            {
+                IsRequired = true,
+            };
+        var searchColumnsOption = new Option<string[]>(
+            name: "--searchColumns",
+            description: "Tên cột để tìm kiếm (tách nhau bởi dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
 
         // 5: Thống kê số lượng sách và chủ đề theo nhà xuất bản
         // Không có flag
 
         // 6: Xử lý sách trùng lặp
-        // Không có flag
+        var duplicateColumnsOption = new Option<string[]>(
+            name: "--duplicateColumns",
+            description: "Tên cột để lọc trùng lặp (tách nhau bằng dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
+        
 
         // 7, 8
         var encryptionKeyOption = new Option<string>(
             name: "--encryptionKey",
-            description: "Đặt chìa khóa mã hóa cho tệp tin xuất ra.");
+            description: "Đặt chìa khóa mã hóa cho tệp tin xuất ra.")
+            {
+                IsRequired = true,
+            };
         var decryptionKeyOption = new Option<string>(
             name: "--decryptionKey",
-            description: "Đặt chìa khóa giải mã cho tệp tin xuất ra.");
+            description: "Đặt chìa khóa giải mã cho tệp tin xuất ra.")
+            {
+                IsRequired = true,
+            };
 
         var rootCommand = new RootCommand("CLI FPLBook xử lý file");
         //rootCommand.AddOption(fileOption);
@@ -71,7 +104,7 @@ internal class Program
         var sortCommand = new Command("sort", "Sắp xếp tệp tin theo cột được cho.")
             {
                 inputFileOption,
-                sortColumnOption,
+                sortColumnsOption,
                 outputFileOption,
             };
 
@@ -80,21 +113,20 @@ internal class Program
             {
                 inputFileOption,
                 searchKeywordOption,
-                searchColumnOption,
-                outputFileOption,
+                searchColumnsOption,
             };
 
         // 5
-        var analyticsCommand = new Command("analytics", "Thống kê tệp tin theo cột được cho.")
+        var analyticsPublisherTitleCommand = new Command("analytics", "Thống kê tệp tin theo cột được cho.")
             {
                 inputFileOption,
-                outputFileOption,
             };
 
         // 6
         var duplicateCommand = new Command("duplicate", "Lọc dữ liệu bị trùng trong tệp tin theo cột được cho và xuất ra tệp tin.")
             {
                 inputFileOption,
+                duplicateColumnsOption,
                 outputFileOption,
             };
 
@@ -110,7 +142,7 @@ internal class Program
         var decryptCommand = new Command("decrypt", "Giải mã hóa tệp tin.")
             {
                 inputFileOption,
-                encryptionKeyOption,
+                decryptionKeyOption,
                 outputFileOption,
             };
 
@@ -118,7 +150,7 @@ internal class Program
         rootCommand.AddCommand(indexCommand); // 2
         rootCommand.AddCommand(sortCommand); // 3
         rootCommand.AddCommand(searchCommand); // 4
-        rootCommand.AddCommand(analyticsCommand); // 5
+        rootCommand.AddCommand(analyticsPublisherTitleCommand); // 5
         rootCommand.AddCommand(duplicateCommand); // 6
         rootCommand.AddCommand(encryptCommand); // 7
         rootCommand.AddCommand(decryptCommand); // 8
@@ -132,46 +164,36 @@ internal class Program
         {
             // Cho lệnh ở dưới
             //await 
-           var records = ReadWriteCsvHelper.ReadCsvFromFile(input);
-
-            records = FPLBook.Modules.Index.MoveIndexColumn(records, indexAfter);
-            ReadWriteCsvHelper.WriteCsvToFile(records, output);
-
         }, inputFileOption, indexAfterOption, outputFileOption);
 
         // 3
-        sortCommand.SetHandler(async (input, sortColumn, output) =>
+        sortCommand.SetHandler(async (input, sortColumns, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-            
-        }, inputFileOption, sortColumnOption, outputFileOption);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(SapXep.SapXepDanhSach(ReadWriteCsvHelper.ReadCsvFromFile(input)), output));
+        }, inputFileOption, sortColumnsOption, outputFileOption);
 
         // 4
-        searchCommand.SetHandler(async (input, searchKeyword, searchColumn, output) =>
+        searchCommand.SetHandler(async (input, searchKeyword, searchColumns, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, searchKeywordOption, searchColumnOption, outputFileOption);
+            await Task.Run(() => TimKiem.TimKiemTheoTuKhoa(ReadWriteCsvHelper.ReadCsvFromFile(input), searchKeyword, searchColumns));
+        }, inputFileOption, searchKeywordOption, searchColumnsOption, outputFileOption);
 
         // 5
-        analyticsCommand.SetHandler(async (input, output) =>
+        analyticsPublisherTitleCommand.SetHandler(async (input) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, outputFileOption);
+            await Task.Run(() => ThongKe.ThongKeTheoNhaXuatBanVaChuDe(ReadWriteCsvHelper.ReadCsvFromFile(input)));
+        }, inputFileOption);
 
         // 6
-        duplicateCommand.SetHandler(async (input, output) =>
+        duplicateCommand.SetHandler(async (input, duplicateColumns, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, outputFileOption);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumns), output));
+        }, inputFileOption, duplicateColumnsOption, outputFileOption);
 
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
         {
-            ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey));
         }, inputFileOption, encryptionKeyOption, outputFileOption);
 
         // 8
@@ -179,7 +201,6 @@ internal class Program
         {
             ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input, decryptionKey), output);
         }, inputFileOption, decryptionKeyOption, outputFileOption);
-
 
         return await rootCommand.InvokeAsync(args);
     }

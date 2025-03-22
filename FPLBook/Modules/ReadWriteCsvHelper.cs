@@ -69,7 +69,7 @@ namespace FPLBook.Modules
             return records;
         }
 
-        private static string[] ParseCsvLine(string line)
+        public static string[] ParseCsvLine(string line)
         {
             var fields = new List<string>();
             var currentField = new StringBuilder();
