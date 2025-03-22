@@ -112,7 +112,7 @@ internal class Program
         var decryptCommand = new Command("decrypt", "Giải mã hóa tệp tin.")
             {
                 inputFileOption,
-                encryptionKeyOption,
+                decryptionKeyOption,
                 outputFileOption,
             };
 
