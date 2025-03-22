@@ -148,7 +148,7 @@ internal class Program
         // 4
         searchCommand.SetHandler(async (input, searchKeyword, searchColumns, output) =>
         {
-            TimKiem.TimKiemTheoTuKhoa(ReadWriteCsvHelper.ReadCsvFromFile(input), searchKeyword, searchColumns);
+            await Task.Run(() => TimKiem.TimKiemTheoTuKhoa(ReadWriteCsvHelper.ReadCsvFromFile(input), searchKeyword, searchColumns));
         }, inputFileOption, searchKeywordOption, searchColumnsOption, outputFileOption);
 
         // 5
@@ -161,13 +161,13 @@ internal class Program
         // 6
         duplicateCommand.SetHandler(async (input, duplicateColumns, output) =>
         {
-            ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumns), output);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumns), output));
         }, inputFileOption, duplicateColumnsOption, outputFileOption);
 
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
         {
-            ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey));
         }, inputFileOption, encryptionKeyOption, outputFileOption);
 
         // 8
