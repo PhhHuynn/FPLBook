@@ -45,7 +45,9 @@ internal class Program
         // Không có flag
 
         // 6: Xử lý sách trùng lặp
-        // Không có flag
+        var duplicateColumnOption = new Option<string[]>(
+            name: "--duplicateColumn",
+            description: "Tên cột để lọc trùng lặp (tách nhau bởi dấu phẩy (,))");
 
         // 7, 8
         var encryptionKeyOption = new Option<string>(
@@ -99,6 +101,7 @@ internal class Program
         var duplicateCommand = new Command("duplicate", "Lọc dữ liệu bị trùng trong tệp tin theo cột được cho và xuất ra tệp tin.")
             {
                 inputFileOption,
+                duplicateColumnOption,
                 outputFileOption,
             };
 
@@ -160,11 +163,10 @@ internal class Program
         }, inputFileOption, outputFileOption);
 
         // 6
-        duplicateCommand.SetHandler(async (input, output) =>
+        duplicateCommand.SetHandler(async (input, duplicateColumn, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, outputFileOption);
+            ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumn), output);
+        }, inputFileOption, duplicateColumnOption, outputFileOption);
 
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
