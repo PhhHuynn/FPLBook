@@ -169,7 +169,7 @@ internal class Program
         // 3
         sortCommand.SetHandler(async (input, sortColumns, output) =>
         {
-            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(SapXep.SapXepDanhSach(ReadWriteCsvHelper.ReadCsvFromFile(input)), output));
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(SapXep.SapXepDanhSach(ReadWriteCsvHelper.ReadCsvFromFile(input), sortColumns), output));
         }, inputFileOption, sortColumnsOption, outputFileOption);
 
         // 4

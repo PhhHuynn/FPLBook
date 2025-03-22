@@ -8,16 +8,35 @@ namespace FPLBook.Modules
 {
     public static class SapXep
     {
-        public static List<Dictionary<string, string>> SapXepDanhSach(List<Dictionary<string, string>> records)
+        public static List<Dictionary<string, string>> SapXepDanhSach(List<Dictionary<string, string>> records, string[] sortColumns)
         {
+            if (records == null || records.Count == 0 || sortColumns == null || sortColumns.Length == 0)
+            {
+                Console.WriteLine("❌ Không có dữ liệu hoặc danh sách cột sắp xếp bị trống.");
+                return records ?? new List<Dictionary<string, string>>();
+            }
 
-            // Sắp xếp theo Publisher rồi Title
-            var sortedBooks = records
-                .OrderBy(b => b.ContainsKey("Publisher") ? b["Publisher"] : "")
-                .ThenBy(b => b.ContainsKey("Title") ? b["Title"] : "")
+            // Kiểm tra xem các cột có tồn tại không
+            var validSortColumns = new List<string>();
+            if (records != null && records.Count > 0 && records[0] != null)
+            {
+                validSortColumns = sortColumns
+                    .Where(col => records[0].ContainsKey(col))
                 .ToList();
+            }
+            if (validSortColumns.Count == 0)
+            {
+                Console.WriteLine("❌ Các cột sắp xếp không hợp lệ!");
+                return records;
+            }
 
-            return sortedBooks;
+            foreach (var col in validSortColumns)
+            {
+                records = records.OrderBy(row => row[col]).ToList();
+            }
+            return records.ToList();
         }
+
+
     }
 }
