@@ -7,32 +7,38 @@ namespace FPLBook.Modules
 {
     public static class TimKiem
     {
-        public static void TimKiemTheoTuKhoa(string keyword, FileInfo file, string columnSearch)
+        public static void TimKiemTheoTuKhoa(List<Dictionary<string, string>> records, string keyword, string[] columnSearch)
         {
-            List<Dictionary<string, string>> records = ReadWriteCsvHelper.ReadCsvFromFile(file);
-
-
-
             if (records.Count == 0)
             {
                 Console.WriteLine("Không có dữ liệu để tìm kiếm!");
                 return;
             }
 
-            if(columnSearch == "-1")
-            {
-                columnSearch = records[0].Keys.First();
-            }
+            List<string> searchColumns = new List<string>();
 
-            // Kiểm tra cột có tồn tại không
-            if (!records[0].ContainsKey(columnSearch))
+            // Nếu -1 thì tìm kiếm trên tất cả cột
+            if (columnSearch[0] == "-1")
             {
-                Console.WriteLine($"Không tìm thấy cột '{columnSearch}' trong file CSV!");
-                return;
+                searchColumns = records[0].Keys.ToList();
+            }
+            else
+            {
+                foreach (var col in columnSearch)
+                {
+                    if (!records[0].ContainsKey(col))
+                    {
+                        Console.WriteLine($"Không tìm thấy cột '{col}' trong file CSV!");
+                        return;
+                    }
+                    searchColumns.Add(col);
+                }
             }
 
             keyword = keyword.Trim().ToLower();
-            var searchResults = records.Where(record => record[columnSearch].ToLower().Contains(keyword)).ToList();
+            var searchResults = records.Where(record =>
+                searchColumns.Any(col => record[col].ToLower().Contains(keyword))
+            ).ToList();
 
             if (searchResults.Count == 0)
             {

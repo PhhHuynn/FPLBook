@@ -27,24 +27,24 @@ internal class Program
             getDefaultValue: () => -1);
 
         // 3: Sắp xếp sách theo nhà xuất bản và tiêu đề
-        var sortColumnOption = new Option<string[]>(
-            name: "--sortColumn",
+        var sortColumnsOption = new Option<string[]>(
+            name: "--sortColumns",
             description: "Tên cột để xếp theo thứ tự (tách nhau bởi dấu phẩy (,))");
 
         // 4: Tìm kiếm sách theo từ khóa (lọc từ khóa)
-        var searchKeywordOption = new Option<string[]>(
+        var searchKeywordOption = new Option<string>(
             name: "--searchKeyword",
             description: "Từ khóa tìm kiếm");
-        var searchColumnOption = new Option<string[]>(
-            name: "--searchColumn",
+        var searchColumnsOption = new Option<string[]>(
+            name: "--searchColumns",
             description: "Tên cột để tìm kiếm (tách nhau bởi dấu phẩy (,))");
 
         // 5: Thống kê số lượng sách và chủ đề theo nhà xuất bản
         // Không có flag
 
         // 6: Xử lý sách trùng lặp
-        var duplicateColumnOption = new Option<string[]>(
-            name: "--duplicateColumn",
+        var duplicateColumnsOption = new Option<string[]>(
+            name: "--duplicateColumns",
             description: "Tên cột để lọc trùng lặp (tách nhau bởi dấu phẩy (,))");
 
         // 7, 8
@@ -75,7 +75,7 @@ internal class Program
         var sortCommand = new Command("sort", "Sắp xếp tệp tin theo cột được cho.")
             {
                 inputFileOption,
-                sortColumnOption,
+                sortColumnsOption,
                 outputFileOption,
             };
 
@@ -84,8 +84,7 @@ internal class Program
             {
                 inputFileOption,
                 searchKeywordOption,
-                searchColumnOption,
-                outputFileOption,
+                searchColumnsOption,
             };
 
         // 5
@@ -99,7 +98,7 @@ internal class Program
         var duplicateCommand = new Command("duplicate", "Lọc dữ liệu bị trùng trong tệp tin theo cột được cho và xuất ra tệp tin.")
             {
                 inputFileOption,
-                duplicateColumnOption,
+                duplicateColumnsOption,
                 outputFileOption,
             };
 
@@ -140,18 +139,17 @@ internal class Program
         }, inputFileOption, indexAfterOption, outputFileOption);
 
         // 3
-        sortCommand.SetHandler(async (input, sortColumn, output) =>
+        sortCommand.SetHandler(async (input, sortColumns, output) =>
         {
             // Cho lệnh ở dưới
             //await 
-        }, inputFileOption, sortColumnOption, outputFileOption);
+        }, inputFileOption, sortColumnsOption, outputFileOption);
 
         // 4
-        searchCommand.SetHandler(async (input, searchKeyword, searchColumn, output) =>
+        searchCommand.SetHandler(async (input, searchKeyword, searchColumns, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, searchKeywordOption, searchColumnOption, outputFileOption);
+            TimKiem.TimKiemTheoTuKhoa(ReadWriteCsvHelper.ReadCsvFromFile(input), searchKeyword, searchColumns);
+        }, inputFileOption, searchKeywordOption, searchColumnsOption, outputFileOption);
 
         // 5
         analyticsCommand.SetHandler(async (input, output) =>
@@ -161,10 +159,10 @@ internal class Program
         }, inputFileOption, outputFileOption);
 
         // 6
-        duplicateCommand.SetHandler(async (input, duplicateColumn, output) =>
+        duplicateCommand.SetHandler(async (input, duplicateColumns, output) =>
         {
-            ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumn), output);
-        }, inputFileOption, duplicateColumnOption, outputFileOption);
+            ReadWriteCsvHelper.WriteCsvToFile(TrungLap.LocTrungLap(ReadWriteCsvHelper.ReadCsvFromFile(input), duplicateColumns), output);
+        }, inputFileOption, duplicateColumnsOption, outputFileOption);
 
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
