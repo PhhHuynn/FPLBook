@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.CommandLine;
+using FPLBook.Modules;
 
 internal class Program
 {
@@ -166,15 +167,13 @@ internal class Program
         // 7
         encryptCommand.SetHandler(async (input, encryptionKey, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
+            ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input), output, encryptionKey);
         }, inputFileOption, encryptionKeyOption, outputFileOption);
 
         // 8
         decryptCommand.SetHandler(async (input, decryptionKey, output) =>
         {
-            // Cho lệnh ở dưới
-            //await 
+            ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input, decryptionKey), output);
         }, inputFileOption, decryptionKeyOption, outputFileOption);
 
 
