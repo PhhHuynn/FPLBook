@@ -32,6 +32,9 @@ internal class Program
             name: "--after",
             description: "Đặt vị trí cột index ở sau một cột bất kỳ (Nếu để là -1, cột sẽ được đặt ở vị trí đầu tiên)",
             getDefaultValue: () => -1);
+        var uniqueColumnOption = new Option<string>(
+            name: "--byColumn",
+            description: "Đặt mã theo cột được cho");
 
         // 3: Sắp xếp sách theo nhà xuất bản và tiêu đề
         var sortColumnsOption = new Option<string[]>(
@@ -97,6 +100,7 @@ internal class Program
             {
                 inputFileOption,
                 indexAfterOption,
+                uniqueColumnOption,
                 outputFileOption,
             };
 
@@ -117,7 +121,7 @@ internal class Program
             };
 
         // 5
-        var analyticsPublisherTitleCommand = new Command("analytics", "Thống kê tệp tin theo cột được cho.")
+        var analyticsPublisherTitleCommand = new Command("analytics", "Thống kê tệp tin theo số lượng sách và chủ đề của nhà xuất bản.")
             {
                 inputFileOption,
             };
@@ -160,10 +164,10 @@ internal class Program
          */
 
         // 2
-        indexCommand.SetHandler(async (input, indexAfter, output) =>
+        indexCommand.SetHandler(async (input, indexAfter, uniqueColumn, output) =>
         {
-            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(FPLBook.Modules.Index.MoveIndexColumn(ReadWriteCsvHelper.ReadCsvFromFile(input), indexAfter), output));
-        }, inputFileOption, indexAfterOption, outputFileOption);
+            await Task.Run(() => ReadWriteCsvHelper.WriteCsvToFile(FPLBook.Modules.Index.MoveIndexColumn(ReadWriteCsvHelper.ReadCsvFromFile(input), indexAfter, uniqueColumn), output));
+        }, inputFileOption, indexAfterOption, uniqueColumnOption, outputFileOption);
 
         // 3
         sortCommand.SetHandler(async (input, sortColumns, output) =>
