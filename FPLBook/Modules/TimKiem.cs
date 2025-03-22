@@ -1,103 +1,70 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FPLBook.Modules
 {
     public static class TimKiem
     {
-
-        public static void TimKiemTheoTieuDe(string keyword, string filePath)
+        public static void TimKiemTheoTuKhoa(string keyword, FileInfo file, string columnSearch)
         {
-            List<string[]> books = new List<string[]>();
-            string[] headers;
-            
-            int titleIndex = -1;
-            using (var reader = new StreamReader(filePath))
+            List<Dictionary<string, string>> records = ReadWriteCsvHelper.ReadCsvFromFile(file);
+
+
+
+            if (records.Count == 0)
             {
-                headers = ParseCsvLine(reader.ReadLine());
-                titleIndex = Array.FindIndex(headers, h => h.Trim().ToLower() == "title");
+                Console.WriteLine("Không có dữ liệu để tìm kiếm!");
+                return;
+            }
 
-                if (titleIndex == -1)
-                {
-                    Console.WriteLine("❌ Không tìm thấy cột 'Title' trong file!");
-                    return;
-                }
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    string[] columns = ParseCsvLine(line);
+            if(columnSearch == "-1")
+            {
+                columnSearch = records[0].Keys.First();
+            }
 
-                    while (columns.Length < headers.Length)
-                    {
-                        columns = columns.Append("N/A").ToArray();
-                    }
-
-                    books.Add(columns);
-                }
+            // Kiểm tra cột có tồn tại không
+            if (!records[0].ContainsKey(columnSearch))
+            {
+                Console.WriteLine($"Không tìm thấy cột '{columnSearch}' trong file CSV!");
+                return;
             }
 
             keyword = keyword.Trim().ToLower();
-            var searchResults = books.Where(b => b[titleIndex].ToLower().Contains(keyword)).ToList();
+            var searchResults = records.Where(record => record[columnSearch].ToLower().Contains(keyword)).ToList();
 
             if (searchResults.Count == 0)
             {
-                Console.WriteLine("Không tìm thấy sách nào!");
+                Console.WriteLine("Không tìm thấy kết quả phù hợp!");
             }
             else
             {
-                PrintTable(headers, searchResults);
+                PrintTable(records[0].Keys.ToList(), searchResults);
             }
         }
 
-        static string[] ParseCsvLine(string line)
+
+        static void PrintTable(List<string> headers, List<Dictionary<string, string>> records)
         {
-            List<string> result = new List<string>();
-            bool inQuotes = false;
-            string current = "";
-
-            foreach (char c in line)
-            {
-                if (c == '"' && inQuotes)
-                    inQuotes = false;
-                else if (c == '"')
-                    inQuotes = true;
-                else if (c == ',' && !inQuotes)
-                {
-                    result.Add(current.Trim());
-                    current = "";
-                }
-                else
-                    current += c;
-            }
-            result.Add(current.Trim());
-
-            return result.ToArray();
-        }
-
-        static void PrintTable(string[] headers, List<string[]> books)
-        {
-            int columnCount = headers.Length;
+            int columnCount = headers.Count;
             int[] columnWidths = new int[columnCount];
 
             for (int i = 0; i < columnCount; i++)
             {
-                columnWidths[i] = Math.Max(headers[i].Length, books.Max(b => b[i].Length)) + 2;
+                string columnName = headers[i];
+                columnWidths[i] = Math.Max(columnName.Length, records.Max(r => r[columnName]?.Length ?? 0)) + 2;
             }
 
             string headerRow = "| " + string.Join(" | ", headers.Select((h, i) => h.PadRight(columnWidths[i]))) + " |";
             Console.WriteLine(headerRow);
             Console.WriteLine(new string('-', headerRow.Length));
 
-            foreach (var book in books)
+            foreach (var record in records)
             {
-                string row = "| " + string.Join(" | ", book.Select((b, i) => b.PadRight(columnWidths[i]))) + " |";
+                string row = "| " + string.Join(" | ", headers.Select((h, i) => (record[h] ?? "").PadRight(columnWidths[i]))) + " |";
                 Console.WriteLine(row);
             }
         }
-
     }
 }

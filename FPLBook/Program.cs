@@ -12,6 +12,9 @@ internal class Program
          * Vị trí thêm option cho lệnh
          */
 
+        TimKiem.TimKiemTheoTuKhoa("comic", new FileInfo("C:\\Users\\FPT\\Downloads\\books.csv"), "Genre");
+
+
         // Flag đọc và xuất file (1)
         var inputFileOption = new Option<FileInfo?>(
             name: "--inputFile",
