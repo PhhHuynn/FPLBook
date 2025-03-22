@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.CommandLine;
 using FPLBook.Modules;
+using System.CommandLine.Parsing;
 
 internal class Program
 {
@@ -15,10 +16,16 @@ internal class Program
         // Flag đọc và xuất file (1)
         var inputFileOption = new Option<FileInfo?>(
             name: "--inputFile",
-            description: "Lấy vị trí file và đọc để xử lý.");
+            description: "Lấy vị trí file và đọc để xử lý.")
+            {
+                IsRequired = true,
+            };
         var outputFileOption = new Option<FileInfo?>(
             name: "--outputFile",
-            description: "Vị trí file xuất sau khi xử lý.");
+            description: "Vị trí file xuất sau khi xử lý.")
+            {
+                IsRequired = true,
+            };
 
         // 2: Gán mã số cho sách và tạo file mới
         var indexAfterOption = new Option<int>(
@@ -29,15 +36,26 @@ internal class Program
         // 3: Sắp xếp sách theo nhà xuất bản và tiêu đề
         var sortColumnsOption = new Option<string[]>(
             name: "--sortColumns",
-            description: "Tên cột để xếp theo thứ tự (tách nhau bởi dấu phẩy (,))");
+            description: "Tên cột để xếp theo thứ tự (tách nhau bởi dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
 
         // 4: Tìm kiếm sách theo từ khóa (lọc từ khóa)
         var searchKeywordOption = new Option<string>(
             name: "--searchKeyword",
-            description: "Từ khóa tìm kiếm");
+            description: "Từ khóa tìm kiếm")
+            {
+                IsRequired = true,
+            };
         var searchColumnsOption = new Option<string[]>(
             name: "--searchColumns",
-            description: "Tên cột để tìm kiếm (tách nhau bởi dấu phẩy (,))");
+            description: "Tên cột để tìm kiếm (tách nhau bởi dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
 
         // 5: Thống kê số lượng sách và chủ đề theo nhà xuất bản
         // Không có flag
@@ -45,15 +63,26 @@ internal class Program
         // 6: Xử lý sách trùng lặp
         var duplicateColumnsOption = new Option<string[]>(
             name: "--duplicateColumns",
-            description: "Tên cột để lọc trùng lặp (tách nhau bởi dấu phẩy (,))");
+            description: "Tên cột để lọc trùng lặp (tách nhau bằng dấu cách)")
+            {
+                IsRequired = true,
+                AllowMultipleArgumentsPerToken = true,
+            };
+        
 
         // 7, 8
         var encryptionKeyOption = new Option<string>(
             name: "--encryptionKey",
-            description: "Đặt chìa khóa mã hóa cho tệp tin xuất ra.");
+            description: "Đặt chìa khóa mã hóa cho tệp tin xuất ra.")
+            {
+                IsRequired = true,
+            };
         var decryptionKeyOption = new Option<string>(
             name: "--decryptionKey",
-            description: "Đặt chìa khóa giải mã cho tệp tin xuất ra.");
+            description: "Đặt chìa khóa giải mã cho tệp tin xuất ra.")
+            {
+                IsRequired = true,
+            };
 
         var rootCommand = new RootCommand("CLI FPLBook xử lý file");
         //rootCommand.AddOption(fileOption);
@@ -173,7 +202,6 @@ internal class Program
         {
             ReadWriteCsvHelper.WriteCsvToFile(ReadWriteCsvHelper.ReadCsvFromFile(input, decryptionKey), output);
         }, inputFileOption, decryptionKeyOption, outputFileOption);
-
 
         return await rootCommand.InvokeAsync(args);
     }
