@@ -88,10 +88,9 @@ internal class Program
             };
 
         // 5
-        var analyticsCommand = new Command("analytics", "Thống kê tệp tin theo cột được cho.")
+        var analyticsPublisherTitleCommand = new Command("analytics", "Thống kê tệp tin theo cột được cho.")
             {
                 inputFileOption,
-                outputFileOption,
             };
 
         // 6
@@ -122,7 +121,7 @@ internal class Program
         rootCommand.AddCommand(indexCommand); // 2
         rootCommand.AddCommand(sortCommand); // 3
         rootCommand.AddCommand(searchCommand); // 4
-        rootCommand.AddCommand(analyticsCommand); // 5
+        rootCommand.AddCommand(analyticsPublisherTitleCommand); // 5
         rootCommand.AddCommand(duplicateCommand); // 6
         rootCommand.AddCommand(encryptCommand); // 7
         rootCommand.AddCommand(decryptCommand); // 8
@@ -151,11 +150,10 @@ internal class Program
         }, inputFileOption, searchKeywordOption, searchColumnsOption, outputFileOption);
 
         // 5
-        analyticsCommand.SetHandler(async (input, output) =>
+        analyticsPublisherTitleCommand.SetHandler(async (input) =>
         {
-            // Cho lệnh ở dưới
-            //await 
-        }, inputFileOption, outputFileOption);
+            await Task.Run(() => ThongKe.ThongKeTheoNhaXuatBanVaChuDe(ReadWriteCsvHelper.ReadCsvFromFile(input)));
+        }, inputFileOption);
 
         // 6
         duplicateCommand.SetHandler(async (input, duplicateColumns, output) =>
